@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mary's Room: A Chromatic Qualia Experiment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4a9eff;
+            --accent-hover: #6bb0ff;
+            --border: #333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .button-secondary:hover {
+            background: var(--bg-secondary);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .citation {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .color-item {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .color-item:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .color-item.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+        }
+
+        .color-item.correct {
+            border-color: var(--success);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .color-item.incorrect {
+            border-color: var(--error);
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 100px;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .color-swatch.hidden {
+            background: var(--bg-primary) !important;
+            border: 2px dashed var(--border);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #667eea);
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .audio-mode-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .mode-button {
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-button.active {
+            border-color: var(--accent);
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .feedback {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .feedback.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .feedback.error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .feedback.info {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .blindfold {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .blindfold.active {
+            display: flex;
+        }
+
+        .blindfold-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        .question-section {
+            margin: 2rem 0;
+        }
+
+        .question {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .palette-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .palette-item:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        .palette-item.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.8);
+        }
+
+        .palette-item .color-name {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .test-question {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .sound-player {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .play-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 2rem;
+        }
+
+        .play-button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.1);
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+        }
+
+        .results-chart {
+            background: var(--bg-tertiary);
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+        }
+
+        .chart-label {
+            width: 100px;
+            color: var(--text-secondary);
+        }
+
+        .chart-fill {
+            flex: 1;
+            height: 30px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-fill-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #667eea);
+            transition: width 0.5s ease;
+        }
+
+        .chart-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            color: var(--warning);
+        }
+
+        kbd {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .keyboard-help {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .reveal-animation {
+            animation: revealColor 2s ease-in-out;
+        }
+
+        @keyframes revealColor {
+            0% { filter: grayscale(100%) brightness(0.5); }
+            100% { filter: grayscale(0%) brightness(1); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Introduction Screen -->
+        <div id="intro-screen" class="screen active">
+            <h1>Mary's Room: A Chromatic Qualia Experiment</h1>
+
+            <div class="card">
+                <h2>The Thought Experiment</h2>
+                <p>
+                    Mary is a brilliant scientist who lives in a black-and-white room. She has never seen colors,
+                    but she knows everything there is to know about color scientifically: wavelengths, neural processing,
+                    physical properties—everything that can be expressed in facts and figures.
+                </p>
+                <p>
+                    The philosophical question posed by Frank Jackson (1982): When Mary finally leaves her room and
+                    sees color for the first time, does she learn something new?
+                </p>
+
+                <div class="citation">
+                    "It seems, however, that Mary does not know all there is to know. For when she is let out of the
+                    black-and-white room or given a color television, she will learn what it is like to see something red,
+                    say. This is rightly described as learning—she will not say 'ho, hum.'"
+                    <br><br>
+                    — Frank Jackson, "Epiphenomenal Qualia" (1982)
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>This Experiment</h2>
+                <p>
+                    In this interactive experience, you will take Mary's place. But instead of seeing colors,
+                    you will learn to identify them through sound alone. Each color has been mapped to unique
+                    acoustic properties:
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 2rem; margin-bottom: 1rem;">
+                    <li><strong>Hue</strong> → Frequency (Red is low, Purple is high)</li>
+                    <li><strong>Saturation</strong> → Harmonic richness (more saturated = richer harmonics)</li>
+                    <li><strong>Brightness</strong> → Volume/amplitude</li>
+                </ul>
+                <p>
+                    You will train to identify colors by sound, then face the critical moment:
+                    when you finally see the actual colors, will you learn something fundamentally new,
+                    or have you already captured everything there is to know through the sonic mappings?
+                </p>
+            </div>
+
+            <div class="info-box">
+                <strong>🎧 Audio Required</strong><br>
+                This experiment requires audio. Please ensure your speakers or headphones are connected
+                and at a comfortable volume.
+            </div>
+
+            <div class="controls">
+                <button class="button" onclick="app.startExperiment()">Begin Experiment</button>
+                <button class="button button-secondary" onclick="app.showScreen('about-screen')">About the Science</button>
+            </div>
+        </div>
+
+        <!-- About Screen -->
+        <div id="about-screen" class="screen">
+            <h2>About This Experiment</h2>
+
+            <div class="card">
+                <h3>The Philosophy</h3>
+                <p>
+                    Mary's Room is one of the most influential thought experiments in the philosophy of mind.
+                    It challenges physicalism—the view that all facts are physical facts—by suggesting that
+                    there are non-physical facts about conscious experience (qualia).
+                </p>
+                <p>
+                    This experiment translates that question into an empirical form: Can complete functional
+                    knowledge (identifying colors perfectly through sound) capture phenomenal knowledge
+                    (what it's like to see those colors)?
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>The Science</h3>
+                <p>
+                    Research in cross-modal perception has shown that the brain can learn arbitrary sensory
+                    substitutions. This experiment uses consistent audio mappings based on:
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 2rem;">
+                    <li>Frequency discrimination (humans can distinguish ~1400 frequency levels)</li>
+                    <li>Harmonic complexity (timbre perception)</li>
+                    <li>Amplitude perception (loudness)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Your Data</h3>
+                <p>
+                    This experiment collects accuracy metrics, learning curves, and your qualitative reflections.
+                    You can export your data at the end for personal analysis or academic use.
+                </p>
+            </div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.showScreen('intro-screen')">← Back</button>
+                <button class="button" onclick="app.startExperiment()">Begin Experiment</button>
+            </div>
+        </div>
+
+        <!-- Audio Mode Selection -->
+        <div id="audio-mode-screen" class="screen">
+            <h2>Choose Your Audio Synthesis Method</h2>
+
+            <div class="card">
+                <p>
+                    Different people perceive and remember sounds differently. Choose the synthesis method
+                    that feels most intuitive to you:
+                </p>
+            </div>
+
+            <div class="color-grid">
+                <div class="card" style="cursor: pointer;" onclick="app.selectAudioMode('sine')">
+                    <h3>Pure Tones</h3>
+                    <p>Simple sine waves. Clean, abstract, minimal. Best for pitch discrimination.</p>
+                    <button class="button" onclick="event.stopPropagation(); app.previewAudioMode('sine')">Preview</button>
+                </div>
+
+                <div class="card" style="cursor: pointer;" onclick="app.selectAudioMode('harmonic')">
+                    <h3>Harmonic Rich</h3>
+                    <p>Multiple harmonics. More musical, complex timbres. Easier to distinguish.</p>
+                    <button class="button" onclick="event.stopPropagation(); app.previewAudioMode('harmonic')">Preview</button>
+                </div>
+
+                <div class="card" style="cursor: pointer;" onclick="app.selectAudioMode('fm')">
+                    <h3>FM Synthesis</h3>
+                    <p>Frequency modulation. Rich, bell-like tones. Most distinctive character.</p>
+                    <button class="button" onclick="event.stopPropagation(); app.previewAudioMode('fm')">Preview</button>
+                </div>
+            </div>
+
+            <div class="info-box">
+                You can change this later if needed. The key is consistency—whichever you choose,
+                the same colors will always produce the same sounds.
+            </div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.showScreen('intro-screen')">← Back</button>
+            </div>
+        </div>
+
+        <!-- Training Mode -->
+        <div id="training-screen" class="screen">
+            <h2>Training Mode: Learn the Color-Sound Mappings</h2>
+
+            <div class="card">
+                <p>
+                    Below are the seven base colors. Click each one to hear its sound.
+                    Notice how the pitch rises from red to purple, how saturation affects the richness,
+                    and how brightness affects volume.
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Keyboard shortcuts:</strong> Press <kbd>1-7</kbd> to play colors, <kbd>Space</kbd> to replay last color
+                </p>
+            </div>
+
+            <div id="training-colors" class="color-grid"></div>
+
+            <div class="card">
+                <h3>Progress Tracker</h3>
+                <p id="training-progress-text">Play each color at least 3 times to proceed</p>
+                <div class="progress-bar">
+                    <div id="training-progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <label>
+                    <input type="checkbox" id="blindfold-toggle" onchange="app.toggleBlindfold()">
+                    <strong>Blindfold Mode:</strong> Hide visual colors during training (optional)
+                </label>
+            </div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.showScreen('audio-mode-screen')">← Back</button>
+                <button class="button" id="training-next-btn" disabled onclick="app.showScreen('practice-screen')">Continue to Practice →</button>
+            </div>
+        </div>
+
+        <!-- Practice Mode -->
+        <div id="practice-screen" class="screen">
+            <h2>Practice Mode: Test Your Knowledge</h2>
+
+            <div class="card">
+                <p>
+                    Now let's practice! A sound will play, and you select which color you think it represents.
+                    You'll get immediate feedback. This is still learning mode—take your time.
+                </p>
+            </div>
+
+            <div class="test-question">
+                <h3>What color is this?</h3>
+                <div class="sound-player">
+                    <button class="play-button" onclick="app.playCurrentSound()">▶</button>
+                    <div>
+                        <p style="color: var(--text-secondary);">Click to play sound</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Keyboard: <kbd>Space</kbd> or <kbd>P</kbd></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="practice-palette" class="color-palette"></div>
+
+            <div id="practice-feedback"></div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="practice-correct">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="practice-total">0</div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="practice-accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.showScreen('training-screen')">← Back to Training</button>
+                <button class="button" id="practice-next-btn" disabled onclick="app.showScreen('journal-pre-screen')">Ready for Formal Test →</button>
+            </div>
+        </div>
+
+        <!-- Pre-Test Journal -->
+        <div id="journal-pre-screen" class="screen">
+            <h2>Before the Test: Describe the Colors</h2>
+
+            <div class="card">
+                <p>
+                    Before we formally test your knowledge, please describe what you think these colors "are"
+                    based solely on the sounds you've learned.
+                </p>
+                <p style="color: var(--text-secondary);">
+                    This is important: You haven't seen the actual colors yet (or you've been blindfolded).
+                    What is your internal concept of "red" or "blue" based purely on the sonic mappings?
+                </p>
+            </div>
+
+            <div class="question-section">
+                <div class="question">
+                    <label for="journal-red"><strong>Describe "Red" (the low-frequency sound):</strong></label>
+                    <textarea id="journal-red" placeholder="What does red 'feel like' to you based on its sound?"></textarea>
+                </div>
+
+                <div class="question">
+                    <label for="journal-blue"><strong>Describe "Blue" (the mid-high frequency sound):</strong></label>
+                    <textarea id="journal-blue" placeholder="What does blue 'feel like' to you based on its sound?"></textarea>
+                </div>
+
+                <div class="question">
+                    <label for="journal-general"><strong>General reflections:</strong></label>
+                    <textarea id="journal-general" placeholder="Do you feel you 'know' these colors? What is missing, if anything?"></textarea>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.showScreen('practice-screen')">← Back</button>
+                <button class="button" onclick="app.savePreJournal()">Continue to Test →</button>
+            </div>
+        </div>
+
+        <!-- Formal Test Mode -->
+        <div id="test-screen" class="screen">
+            <h2>Formal Assessment: The Blind Test</h2>
+
+            <div class="card">
+                <p>
+                    This is the formal test. You'll identify 20 colors by sound alone, with no feedback
+                    until the end. This tests whether you've truly learned the mappings.
+                </p>
+
+                <div class="difficulty-selector">
+                    <button class="mode-button active" onclick="app.setDifficulty('easy')" id="diff-easy">
+                        <strong>Easy</strong><br>7 distinct hues
+                    </button>
+                    <button class="mode-button" onclick="app.setDifficulty('medium')" id="diff-medium">
+                        <strong>Medium</strong><br>+ brightness variations
+                    </button>
+                    <button class="mode-button" onclick="app.setDifficulty('hard')" id="diff-hard">
+                        <strong>Hard</strong><br>+ saturation variations
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <p>Question <span id="test-question-num">1</span> of 20</p>
+                <div class="progress-bar">
+                    <div id="test-progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="test-question">
+                <h3>What color is this?</h3>
+                <div class="sound-player">
+                    <button class="play-button" onclick="app.playCurrentTestSound()">▶</button>
+                    <div>
+                        <p style="color: var(--text-secondary);">Click to play sound</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="test-palette" class="color-palette"></div>
+
+            <div class="navigation">
+                <button class="button button-secondary" onclick="app.confirmBackFromTest()">← Back</button>
+                <button class="button" id="test-submit-btn" disabled onclick="app.submitTestAnswer()">Submit Answer</button>
+            </div>
+        </div>
+
+        <!-- The Reveal -->
+        <div id="reveal-screen" class="screen">
+            <h2>The Moment of Truth</h2>
+
+            <div class="card">
+                <p>
+                    You've completed the test. Your accuracy was <strong id="reveal-accuracy">0%</strong>.
+                </p>
+                <p>
+                    Now comes the critical moment—the equivalent of Mary leaving her room.
+                </p>
+                <p style="font-size: 1.2rem; color: var(--accent);">
+                    You will now see the actual visual colors for the first time.
+                </p>
+            </div>
+
+            <div class="warning-box">
+                ⚠️ Once you click below, you cannot return to the blind state. Take a moment to prepare.
+            </div>
+
+            <div class="navigation" style="justify-content: center;">
+                <button class="button" onclick="app.revealColors()" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                    Reveal the Colors
+                </button>
+            </div>
+        </div>
+
+        <!-- Post-Reveal Reflection -->
+        <div id="reflection-screen" class="screen">
+            <h2>Reflection: Did You Learn Something New?</h2>
+
+            <div class="card">
+                <p>
+                    You can now see the actual colors. Here they are with their sounds:
+                </p>
+            </div>
+
+            <div id="reflection-colors" class="color-grid"></div>
+
+            <div class="question-section">
+                <div class="question">
+                    <label for="journal-post-seeing"><strong>Now that you've seen the colors, did you learn something new?</strong></label>
+                    <textarea id="journal-post-seeing" placeholder="Is the visual experience of 'red' different from what you knew through sound?"></textarea>
+                </div>
+
+                <div class="question">
+                    <label for="journal-comparison"><strong>Compare the sonic and visual experiences:</strong></label>
+                    <textarea id="journal-comparison" placeholder="How does the visual 'red' relate to the sonic 'red'? Are they the same? Different? Complementary?"></textarea>
+                </div>
+
+                <div class="question">
+                    <label for="journal-qualia"><strong>The philosophical question:</strong></label>
+                    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        Mary knew all the physical facts about color. You knew all the functional facts (you could identify colors reliably).
+                        But did seeing the colors teach you something that the sonic mappings couldn't capture?
+                    </p>
+                    <textarea id="journal-qualia" placeholder="Your thoughts on qualia and the knowledge argument..."></textarea>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="button" onclick="app.showResults()">View Results & Export Data →</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <h2>Your Results</h2>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="results-accuracy">0%</div>
+                    <div class="stat-label">Test Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="results-practice-accuracy">0%</div>
+                    <div class="stat-label">Practice Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="results-time">0m</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="results-plays">0</div>
+                    <div class="stat-label">Sounds Played</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Performance by Color</h3>
+                <div id="results-chart" class="results-chart"></div>
+            </div>
+
+            <div class="card">
+                <h3>Your Reflections</h3>
+                <div id="results-journal"></div>
+            </div>
+
+            <div class="card">
+                <h3>Export Your Data</h3>
+                <p>
+                    Download your complete experiment data as JSON for personal analysis or academic use.
+                    Includes all accuracy metrics, timestamps, responses, and journal entries.
+                </p>
+                <button class="button" onclick="app.exportData()">📥 Download Data (JSON)</button>
+                <button class="button button-secondary" onclick="app.exportReport()">📄 Download Report (Text)</button>
+            </div>
+
+            <div class="navigation">
+                <button class="button" onclick="app.restart()">Start New Experiment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blindfold Overlay -->
+    <div id="blindfold" class="blindfold">
+        <div class="blindfold-content">
+            <h2>Blindfold Mode Active</h2>
+            <p>Focus on the sounds. The visual colors are hidden.</p>
+            <button class="button" onclick="app.toggleBlindfold()">Remove Blindfold</button>
+        </div>
+    </div>
+
+    <script>
+        // Mary's Room Application
+        const app = {
+            // Color definitions with sound mappings
+            colors: [
+                { name: 'Red', hue: 0, freq: 200, rgb: 'rgb(255, 0, 0)', hex: '#FF0000' },
+                { name: 'Orange', hue: 30, freq: 250, rgb: 'rgb(255, 165, 0)', hex: '#FFA500' },
+                { name: 'Yellow', hue: 60, freq: 300, rgb: 'rgb(255, 255, 0)', hex: '#FFFF00' },
+                { name: 'Green', hue: 120, freq: 350, rgb: 'rgb(0, 255, 0)', hex: '#00FF00' },
+                { name: 'Cyan', hue: 180, freq: 400, rgb: 'rgb(0, 255, 255)', hex: '#00FFFF' },
+                { name: 'Blue', hue: 240, freq: 450, rgb: 'rgb(0, 0, 255)', hex: '#0000FF' },
+                { name: 'Purple', hue: 270, freq: 500, rgb: 'rgb(128, 0, 128)', hex: '#800080' }
+            ],
+
+            // State
+            state: {
+                audioMode: 'sine',
+                difficulty: 'easy',
+                blindfolded: false,
+                currentScreen: 'intro-screen',
+                startTime: null,
+                trainingPlays: {},
+                practiceStats: { correct: 0, total: 0, history: [] },
+                testStats: { correct: 0, total: 0, answers: [], currentQuestion: 0 },
+                currentColor: null,
+                testQuestions: [],
+                journals: {},
+                soundPlays: 0,
+                hasSeenColors: false
+            },
+
+            // Audio synthesis
+            synth: null,
+            audioInitialized: false,
+
+            async initAudio() {
+                if (this.audioInitialized) return;
+
+                await Tone.start();
+                this.audioInitialized = true;
+                console.log('Audio initialized');
+            },
+
+            async playSound(color, duration = 1) {
+                await this.initAudio();
+                this.state.soundPlays++;
+
+                const { freq } = color;
+                const now = Tone.now();
+
+                if (this.state.audioMode === 'sine') {
+                    const synth = new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 0.3 }
+                    }).toDestination();
+
+                    synth.triggerAttackRelease(freq, duration, now);
+
+                    setTimeout(() => synth.dispose(), (duration + 0.5) * 1000);
+                }
+                else if (this.state.audioMode === 'harmonic') {
+                    const synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 0.3 }
+                    }).toDestination();
+
+                    // Play fundamental + harmonics
+                    const notes = [freq, freq * 2, freq * 3].map(f => Tone.Frequency(f, 'hz').toNote());
+                    synth.triggerAttackRelease(notes, duration, now, [1, 0.5, 0.25]);
+
+                    setTimeout(() => synth.dispose(), (duration + 0.5) * 1000);
+                }
+                else if (this.state.audioMode === 'fm') {
+                    const synth = new Tone.FMSynth({
+                        harmonicity: 3,
+                        modulationIndex: 10,
+                        envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 0.3 },
+                        modulation: { type: 'sine' },
+                        modulationEnvelope: { attack: 0.2, decay: 0.2, sustain: 0.3, release: 0.3 }
+                    }).toDestination();
+
+                    synth.triggerAttackRelease(freq, duration, now);
+
+                    setTimeout(() => synth.dispose(), (duration + 0.5) * 1000);
+                }
+            },
+
+            // Navigation
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+                this.state.currentScreen = screenId;
+                window.scrollTo(0, 0);
+            },
+
+            startExperiment() {
+                this.state.startTime = Date.now();
+                this.showScreen('audio-mode-screen');
+            },
+
+            async selectAudioMode(mode) {
+                this.state.audioMode = mode;
+                await this.initAudio();
+                this.initTraining();
+                this.showScreen('training-screen');
+            },
+
+            async previewAudioMode(mode) {
+                const prevMode = this.state.audioMode;
+                this.state.audioMode = mode;
+                await this.playSound(this.colors[0], 0.5);
+                this.state.audioMode = prevMode;
+            },
+
+            // Training Mode
+            initTraining() {
+                const container = document.getElementById('training-colors');
+                container.innerHTML = '';
+
+                this.colors.forEach((color, index) => {
+                    this.state.trainingPlays[color.name] = 0;
+
+                    const item = document.createElement('div');
+                    item.className = 'color-item';
+                    item.innerHTML = `
+                        <div class="color-swatch ${this.state.blindfolded ? 'hidden' : ''}"
+                             style="background: ${color.rgb}"></div>
+                        <strong>${color.name}</strong>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">${color.freq}Hz</p>
+                        <p style="color: var(--text-secondary); font-size: 0.8rem;">Plays: <span id="play-count-${color.name}">0</span></p>
+                    `;
+                    item.onclick = () => this.playTrainingColor(color);
+                    item.tabIndex = 0;
+                    item.onkeypress = (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.playTrainingColor(color);
+                        }
+                    };
+
+                    container.appendChild(item);
+                });
+
+                this.updateTrainingProgress();
+            },
+
+            async playTrainingColor(color) {
+                await this.playSound(color);
+                this.state.trainingPlays[color.name]++;
+                this.state.currentColor = color;
+
+                document.getElementById(`play-count-${color.name}`).textContent =
+                    this.state.trainingPlays[color.name];
+
+                this.updateTrainingProgress();
+            },
+
+            updateTrainingProgress() {
+                const minPlays = 3;
+                const total = this.colors.length * minPlays;
+                const current = Object.values(this.state.trainingPlays).reduce((a, b) =>
+                    Math.min(a + b, total), 0);
+
+                const percent = (current / total) * 100;
+                document.getElementById('training-progress-fill').style.width = percent + '%';
+
+                const allTrained = Object.values(this.state.trainingPlays).every(p => p >= minPlays);
+                document.getElementById('training-next-btn').disabled = !allTrained;
+
+                if (allTrained) {
+                    document.getElementById('training-progress-text').textContent =
+                        '✓ Training complete! You may proceed.';
+                } else {
+                    const remaining = this.colors.filter(c =>
+                        this.state.trainingPlays[c.name] < minPlays
+                    ).map(c => c.name).join(', ');
+                    document.getElementById('training-progress-text').textContent =
+                        `Still need more practice with: ${remaining}`;
+                }
+            },
+
+            toggleBlindfold() {
+                this.state.blindfolded = !this.state.blindfolded;
+                document.getElementById('blindfold').classList.toggle('active', this.state.blindfolded);
+
+                document.querySelectorAll('.color-swatch').forEach(swatch => {
+                    swatch.classList.toggle('hidden', this.state.blindfolded);
+                });
+            },
+
+            // Practice Mode
+            initPractice() {
+                this.state.currentColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.renderPracticePalette();
+                this.updatePracticeStats();
+            },
+
+            renderPracticePalette() {
+                const container = document.getElementById('practice-palette');
+                container.innerHTML = '';
+
+                this.colors.forEach(color => {
+                    const item = document.createElement('div');
+                    item.className = 'palette-item';
+                    item.style.background = this.state.hasSeenColors ? color.rgb : 'var(--bg-tertiary)';
+                    item.innerHTML = `<div class="color-name">${color.name}</div>`;
+                    item.onclick = () => this.selectPracticeColor(color, item);
+                    container.appendChild(item);
+                });
+            },
+
+            async playCurrentSound() {
+                if (this.state.currentColor) {
+                    await this.playSound(this.state.currentColor);
+                }
+            },
+
+            async selectPracticeColor(selected, element) {
+                const correct = selected.name === this.state.currentColor.name;
+
+                this.state.practiceStats.total++;
+                if (correct) this.state.practiceStats.correct++;
+
+                this.state.practiceStats.history.push({
+                    timestamp: Date.now(),
+                    target: this.state.currentColor.name,
+                    selected: selected.name,
+                    correct: correct
+                });
+
+                // Visual feedback
+                const feedback = document.getElementById('practice-feedback');
+                if (correct) {
+                    element.classList.add('correct');
+                    feedback.innerHTML = '<div class="feedback success">✓ Correct!</div>';
+
+                    setTimeout(() => {
+                        element.classList.remove('correct');
+                        this.nextPracticeQuestion();
+                    }, 1500);
+                } else {
+                    element.classList.add('incorrect');
+                    feedback.innerHTML = `
+                        <div class="feedback error">
+                            ✗ Incorrect. That was <strong>${this.state.currentColor.name}</strong>.
+                            <button class="button button-secondary" onclick="app.playCurrentSound()" style="margin-top: 0.5rem;">
+                                Replay Sound
+                            </button>
+                        </div>
+                    `;
+
+                    setTimeout(() => {
+                        element.classList.remove('incorrect');
+                    }, 2000);
+                }
+
+                this.updatePracticeStats();
+            },
+
+            nextPracticeQuestion() {
+                document.getElementById('practice-feedback').innerHTML = '';
+                this.state.currentColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.renderPracticePalette();
+            },
+
+            updatePracticeStats() {
+                const { correct, total } = this.state.practiceStats;
+                const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+                document.getElementById('practice-correct').textContent = correct;
+                document.getElementById('practice-total').textContent = total;
+                document.getElementById('practice-accuracy').textContent = accuracy + '%';
+
+                // Enable next button after 15 attempts with >70% accuracy
+                const canProceed = total >= 15 && accuracy >= 70;
+                const btn = document.getElementById('practice-next-btn');
+                btn.disabled = !canProceed;
+
+                if (canProceed && total === 15) {
+                    btn.textContent = `Great! ${accuracy}% accuracy - Continue →`;
+                }
+            },
+
+            // Journal
+            savePreJournal() {
+                this.state.journals.preRed = document.getElementById('journal-red').value;
+                this.state.journals.preBlue = document.getElementById('journal-blue').value;
+                this.state.journals.preGeneral = document.getElementById('journal-general').value;
+
+                this.initTest();
+                this.showScreen('test-screen');
+            },
+
+            // Test Mode
+            setDifficulty(level) {
+                this.state.difficulty = level;
+
+                document.querySelectorAll('.difficulty-selector .mode-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`diff-${level}`).classList.add('active');
+            },
+
+            initTest() {
+                this.state.testQuestions = [];
+                this.state.testStats = { correct: 0, total: 0, answers: [], currentQuestion: 0 };
+
+                // Generate 20 test questions
+                for (let i = 0; i < 20; i++) {
+                    const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                    this.state.testQuestions.push({ ...color });
+                }
+
+                this.loadTestQuestion(0);
+            },
+
+            loadTestQuestion(index) {
+                if (index >= this.state.testQuestions.length) {
+                    this.completeTest();
+                    return;
+                }
+
+                this.state.testStats.currentQuestion = index;
+                this.state.currentColor = this.state.testQuestions[index];
+
+                document.getElementById('test-question-num').textContent = index + 1;
+                const percent = (index / 20) * 100;
+                document.getElementById('test-progress-fill').style.width = percent + '%';
+
+                this.renderTestPalette();
+            },
+
+            renderTestPalette() {
+                const container = document.getElementById('test-palette');
+                container.innerHTML = '';
+
+                this.colors.forEach(color => {
+                    const item = document.createElement('div');
+                    item.className = 'palette-item';
+                    item.style.background = 'var(--bg-tertiary)';  // Hidden during test
+                    item.innerHTML = `<div class="color-name">${color.name}</div>`;
+                    item.onclick = () => this.selectTestColor(color, item);
+                    container.appendChild(item);
+                });
+
+                document.getElementById('test-submit-btn').disabled = true;
+            },
+
+            selectTestColor(color, element) {
+                document.querySelectorAll('#test-palette .palette-item').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                element.classList.add('selected');
+
+                this.state.testStats.selectedColor = color;
+                document.getElementById('test-submit-btn').disabled = false;
+            },
+
+            async playCurrentTestSound() {
+                if (this.state.currentColor) {
+                    await this.playSound(this.state.currentColor);
+                }
+            },
+
+            submitTestAnswer() {
+                const { selectedColor } = this.state.testStats;
+                const correct = selectedColor.name === this.state.currentColor.name;
+
+                this.state.testStats.answers.push({
+                    timestamp: Date.now(),
+                    target: this.state.currentColor.name,
+                    selected: selectedColor.name,
+                    correct: correct
+                });
+
+                if (correct) this.state.testStats.correct++;
+                this.state.testStats.total++;
+
+                this.loadTestQuestion(this.state.testStats.currentQuestion + 1);
+            },
+
+            completeTest() {
+                const accuracy = Math.round((this.state.testStats.correct / 20) * 100);
+                document.getElementById('reveal-accuracy').textContent = accuracy + '%';
+                this.showScreen('reveal-screen');
+            },
+
+            confirmBackFromTest() {
+                if (confirm('Are you sure? Your test progress will be lost.')) {
+                    this.showScreen('practice-screen');
+                }
+            },
+
+            // Reveal
+            async revealColors() {
+                this.state.hasSeenColors = true;
+
+                // Show all colors in reflection
+                const container = document.getElementById('reflection-colors');
+                container.innerHTML = '';
+
+                for (const color of this.colors) {
+                    const item = document.createElement('div');
+                    item.className = 'color-item';
+                    item.innerHTML = `
+                        <div class="color-swatch reveal-animation" style="background: ${color.rgb}"></div>
+                        <strong>${color.name}</strong>
+                        <button class="button button-secondary" onclick="app.playSound(app.colors[${this.colors.indexOf(color)}])"
+                                style="margin-top: 0.5rem; width: 100%;">
+                            Play Sound
+                        </button>
+                    `;
+                    container.appendChild(item);
+                }
+
+                this.showScreen('reflection-screen');
+            },
+
+            // Results
+            showResults() {
+                // Save post journals
+                this.state.journals.postSeeing = document.getElementById('journal-post-seeing').value;
+                this.state.journals.comparison = document.getElementById('journal-comparison').value;
+                this.state.journals.qualia = document.getElementById('journal-qualia').value;
+
+                // Calculate stats
+                const testAcc = Math.round((this.state.testStats.correct / 20) * 100);
+                const practiceAcc = this.state.practiceStats.total > 0 ?
+                    Math.round((this.state.practiceStats.correct / this.state.practiceStats.total) * 100) : 0;
+                const totalTime = Math.round((Date.now() - this.state.startTime) / 60000);
+
+                document.getElementById('results-accuracy').textContent = testAcc + '%';
+                document.getElementById('results-practice-accuracy').textContent = practiceAcc + '%';
+                document.getElementById('results-time').textContent = totalTime + 'm';
+                document.getElementById('results-plays').textContent = this.state.soundPlays;
+
+                // Performance by color
+                this.renderPerformanceChart();
+
+                // Journal display
+                const journalContainer = document.getElementById('results-journal');
+                journalContainer.innerHTML = `
+                    <div style="margin-bottom: 2rem;">
+                        <h4>Before seeing colors (Red):</h4>
+                        <p style="color: var(--text-secondary);">${this.state.journals.preRed || 'No response'}</p>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <h4>After seeing colors:</h4>
+                        <p style="color: var(--text-secondary);">${this.state.journals.postSeeing || 'No response'}</p>
+                    </div>
+                    <div>
+                        <h4>On qualia and the knowledge argument:</h4>
+                        <p style="color: var(--text-secondary);">${this.state.journals.qualia || 'No response'}</p>
+                    </div>
+                `;
+
+                this.showScreen('results-screen');
+            },
+
+            renderPerformanceChart() {
+                const chartContainer = document.getElementById('results-chart');
+                chartContainer.innerHTML = '';
+
+                // Calculate accuracy per color
+                const colorStats = {};
+                this.colors.forEach(c => colorStats[c.name] = { correct: 0, total: 0 });
+
+                this.state.testStats.answers.forEach(answer => {
+                    if (colorStats[answer.target]) {
+                        colorStats[answer.target].total++;
+                        if (answer.correct) colorStats[answer.target].correct++;
+                    }
+                });
+
+                Object.entries(colorStats).forEach(([name, stats]) => {
+                    const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    bar.innerHTML = `
+                        <div class="chart-label">${name}</div>
+                        <div class="chart-fill">
+                            <div class="chart-fill-inner" style="width: ${accuracy}%"></div>
+                            <div class="chart-value">${accuracy}%</div>
+                        </div>
+                    `;
+                    chartContainer.appendChild(bar);
+                });
+            },
+
+            // Data Export
+            exportData() {
+                const data = {
+                    metadata: {
+                        experimentName: "Mary's Room Chromatic Qualia Experiment",
+                        timestamp: new Date().toISOString(),
+                        duration: Date.now() - this.state.startTime,
+                        audioMode: this.state.audioMode,
+                        difficulty: this.state.difficulty
+                    },
+                    training: {
+                        plays: this.state.trainingPlays,
+                        totalSoundPlays: this.state.soundPlays
+                    },
+                    practice: {
+                        accuracy: this.state.practiceStats.total > 0 ?
+                            (this.state.practiceStats.correct / this.state.practiceStats.total) : 0,
+                        history: this.state.practiceStats.history
+                    },
+                    test: {
+                        accuracy: this.state.testStats.correct / 20,
+                        answers: this.state.testStats.answers
+                    },
+                    journals: this.state.journals,
+                    colors: this.colors
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `marys-room-data-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            },
+
+            exportReport() {
+                const testAcc = Math.round((this.state.testStats.correct / 20) * 100);
+                const practiceAcc = this.state.practiceStats.total > 0 ?
+                    Math.round((this.state.practiceStats.correct / this.state.practiceStats.total) * 100) : 0;
+                const totalTime = Math.round((Date.now() - this.state.startTime) / 60000);
+
+                const report = `
+MARY'S ROOM: CHROMATIC QUALIA EXPERIMENT
+Report Generated: ${new Date().toLocaleString()}
+
+========================================
+EXPERIMENT OVERVIEW
+========================================
+
+The Mary's Room thought experiment, proposed by philosopher Frank Jackson (1982),
+asks whether complete physical knowledge about color can capture the phenomenal
+experience of seeing color for the first time.
+
+This experiment translates that question into an empirical form: participants
+learn to identify colors through sound alone, then see the actual colors and
+reflect on whether they learned something fundamentally new.
+
+========================================
+YOUR RESULTS
+========================================
+
+Audio Synthesis Mode: ${this.state.audioMode}
+Test Difficulty: ${this.state.difficulty}
+Total Time: ${totalTime} minutes
+Total Sound Plays: ${this.state.soundPlays}
+
+Practice Performance: ${practiceAcc}% (${this.state.practiceStats.correct}/${this.state.practiceStats.total})
+Test Performance: ${testAcc}% (${this.state.testStats.correct}/20)
+
+========================================
+PRE-VISUAL REFLECTIONS
+========================================
+
+Q: Describe "Red" based on sound alone:
+${this.state.journals.preRed || 'No response'}
+
+Q: Describe "Blue" based on sound alone:
+${this.state.journals.preBlue || 'No response'}
+
+Q: General reflections before seeing colors:
+${this.state.journals.preGeneral || 'No response'}
+
+========================================
+POST-VISUAL REFLECTIONS
+========================================
+
+Q: Did you learn something new when you saw the colors?
+${this.state.journals.postSeeing || 'No response'}
+
+Q: Compare sonic vs. visual experiences:
+${this.state.journals.comparison || 'No response'}
+
+Q: Thoughts on qualia and the knowledge argument:
+${this.state.journals.qualia || 'No response'}
+
+========================================
+CITATION
+========================================
+
+Jackson, F. (1982). "Epiphenomenal Qualia." Philosophical Quarterly, 32(127), 127-136.
+
+========================================
+`.trim();
+
+                const blob = new Blob([report], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `marys-room-report-${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            },
+
+            restart() {
+                if (confirm('Start a completely new experiment? All data will be reset.')) {
+                    location.reload();
+                }
+            }
+        };
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            const screen = app.state.currentScreen;
+
+            // Number keys for training
+            if (screen === 'training-screen' && e.key >= '1' && e.key <= '7') {
+                const index = parseInt(e.key) - 1;
+                if (app.colors[index]) {
+                    app.playTrainingColor(app.colors[index]);
+                }
+            }
+
+            // Space or P to play current sound
+            if ((e.key === ' ' || e.key.toLowerCase() === 'p') &&
+                (screen === 'practice-screen' || screen === 'test-screen')) {
+                e.preventDefault();
+                if (screen === 'practice-screen') {
+                    app.playCurrentSound();
+                } else {
+                    app.playCurrentTestSound();
+                }
+            }
+        });
+
+        // Initialize practice when screen is shown
+        const originalShowScreen = app.showScreen;
+        app.showScreen = function(screenId) {
+            originalShowScreen.call(this, screenId);
+
+            if (screenId === 'practice-screen' && this.state.practiceStats.total === 0) {
+                this.initPractice();
+            }
+        };
+
+        // Auto-focus improvements
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Mary's Room experiment loaded");
+        });
+    </script>
+</body>
+</html>
