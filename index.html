@@ -601,6 +601,19 @@
                 <button class="button" onclick="app.startExperiment()">Begin Experiment</button>
                 <button class="button button-secondary" onclick="app.showScreen('about-screen')">About the Science</button>
             </div>
+
+            <div class="info-box" style="margin-top: 2rem;">
+                <strong>🧪 Quick Navigation (for testing/demo):</strong><br>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                    <button class="button button-secondary" onclick="app.quickNav('training-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Training</button>
+                    <button class="button button-secondary" onclick="app.quickNav('practice-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Practice</button>
+                    <button class="button button-secondary" onclick="app.quickNav('journal-pre-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Journal</button>
+                    <button class="button button-secondary" onclick="app.quickNav('test-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Formal Test</button>
+                    <button class="button button-secondary" onclick="app.quickNav('reveal-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Reveal</button>
+                    <button class="button button-secondary" onclick="app.quickNav('reflection-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Reflection</button>
+                    <button class="button button-secondary" onclick="app.quickNav('results-screen')" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Results</button>
+                </div>
+            </div>
         </div>
 
         <!-- About Screen -->
@@ -1591,6 +1604,83 @@ Jackson, F. (1982). "Epiphenomenal Qualia." Philosophical Quarterly, 32(127), 12
                 if (confirm('Start a completely new experiment? All data will be reset.')) {
                     location.reload();
                 }
+            },
+
+            // Quick navigation for testing/demo purposes
+            async quickNav(screenId) {
+                if (!this.audioInitialized) {
+                    this.state.audioMode = 'sine';
+                    await this.initAudio();
+                }
+
+                // Initialize state as needed for each screen
+                if (!this.state.startTime) {
+                    this.state.startTime = Date.now();
+                }
+
+                // Set up minimum required state
+                if (screenId === 'training-screen') {
+                    this.initTraining();
+                }
+                else if (screenId === 'practice-screen') {
+                    // Enable button by faking some training
+                    this.colors.forEach(c => this.state.trainingPlays[c.name] = 3);
+                    this.initPractice();
+                }
+                else if (screenId === 'journal-pre-screen') {
+                    // Add some practice stats
+                    this.state.practiceStats = { correct: 12, total: 15, history: [] };
+                }
+                else if (screenId === 'test-screen') {
+                    this.initTest();
+                }
+                else if (screenId === 'reveal-screen') {
+                    // Fake test completion
+                    this.state.testStats = {
+                        correct: 15,
+                        total: 20,
+                        answers: Array(20).fill(null).map(() => ({
+                            target: 'Red',
+                            selected: 'Red',
+                            correct: true,
+                            timestamp: Date.now()
+                        }))
+                    };
+                    const accuracy = Math.round((15 / 20) * 100);
+                    document.getElementById('reveal-accuracy').textContent = accuracy + '%';
+                }
+                else if (screenId === 'reflection-screen') {
+                    this.state.hasSeenColors = true;
+                    this.revealColors();
+                    return; // revealColors already shows the screen
+                }
+                else if (screenId === 'results-screen') {
+                    // Fill in demo data
+                    this.state.hasSeenColors = true;
+                    this.state.testStats = {
+                        correct: 16,
+                        total: 20,
+                        answers: this.colors.map((color, i) => ({
+                            target: color.name,
+                            selected: color.name,
+                            correct: i < 16,
+                            timestamp: Date.now()
+                        }))
+                    };
+                    this.state.practiceStats = { correct: 18, total: 20, history: [] };
+                    this.state.journals = {
+                        preRed: 'Demo response about red before seeing it',
+                        preBlue: 'Demo response about blue before seeing it',
+                        preGeneral: 'Demo general reflections',
+                        postSeeing: 'Demo response after seeing colors',
+                        comparison: 'Demo comparison of sonic vs visual',
+                        qualia: 'Demo thoughts on qualia'
+                    };
+                    this.showResults();
+                    return; // showResults already shows the screen
+                }
+
+                this.showScreen(screenId);
             }
         };
 

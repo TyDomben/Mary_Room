@@ -100,9 +100,28 @@ npx serve
 # Then open http://localhost:8000
 ```
 
+### 🧪 Quick Testing / Demo Mode
+
+On the introduction screen, you'll see **Quick Navigation** buttons that let you jump to any part of the experiment instantly. This is perfect for:
+- Testing all features
+- Demonstrating specific parts
+- Exploring the interface
+- Reviewing the philosophical questions
+
+Just click any of these buttons:
+- **Training** - Color-sound learning interface
+- **Practice** - Interactive quiz with feedback
+- **Journal** - Philosophical reflection prompts
+- **Formal Test** - 20-question assessment
+- **Reveal** - The "Mary leaves the room" moment
+- **Reflection** - Post-reveal journaling
+- **Results** - Data visualization and export
+
 ## 🎯 How to Use
 
 ### The Experiment Flow
+
+**For the full philosophical experience, follow this path:**
 
 1. **Introduction**
    - Learn about Mary's Room thought experiment
@@ -112,36 +131,42 @@ npx serve
    - Choose your preferred synthesis method
    - Preview each option
 
-3. **Training Mode**
+3. **Training Mode** ⚠️ *Required: Play each color 3+ times*
    - Play each of the 7 colors at least 3 times
    - Memorize the sound-color associations
    - Optional: Enable Blindfold Mode for a purer experiment
+   - The "Continue to Practice" button enables when complete
 
-4. **Practice Mode**
+4. **Practice Mode** ⚠️ *Required: 15 attempts with 70%+ accuracy*
    - Test yourself with immediate feedback
    - Build confidence and accuracy
-   - Must achieve 70%+ accuracy to proceed
+   - Must achieve 70%+ accuracy over 15 attempts to proceed
+   - The "Ready for Formal Test" button enables when you qualify
 
 5. **Pre-Test Reflection**
    - Describe what you think colors "are" based on sound alone
    - Important philosophical data point
+   - These reflections will be saved and shown in your results
 
-6. **Formal Test**
-   - 20 questions, no feedback
+6. **Formal Test** 🎯
+   - 20 questions, no feedback until the end
    - Demonstrates your functional knowledge
+   - Choose difficulty: Easy (7 hues), Medium (+brightness), Hard (+saturation)
 
 7. **The Reveal**
    - See colors for the first time
    - The "Mary leaves the room" moment
+   - Prepare yourself - this is the critical philosophical moment!
 
 8. **Post-Test Reflection**
-   - Did you learn something new?
+   - Did you learn something new when you saw the colors?
    - Compare sonic vs. visual experiences
    - Reflect on qualia and phenomenal consciousness
 
 9. **Results & Export**
-   - View your performance
-   - Export data for analysis
+   - View your performance by color
+   - See your learning curve
+   - Export complete data (JSON or text report)
 
 ### Keyboard Shortcuts
 
